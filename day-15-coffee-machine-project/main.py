@@ -1,15 +1,12 @@
 from menu import MENU
 from resources import RESOURCES
 
-QUARTERS = 0.25
-DIMES = 0.10
-NICKLES = 0.05
-PENNIES = 0.01
-
 
 def update_resources(action, milk, water, coffee):
-    """Add or Subtract resources base on action. This function is used by the process_order() to reduce resources and
-    the option Refill to add more resources."""
+    """Add or Subtract resources base on action.
+    It requires input of action (reduce or refill) and the number of resources for coffee, milk and water to be added or
+    subtracted.
+    This function is used by the process_order() to reduce resources and the option Refill to add more resources."""
     water_inventory = RESOURCES["water"]
     coffee_inventory = RESOURCES["coffee"]
     milk_inventory = RESOURCES["milk"]
@@ -24,22 +21,29 @@ def update_resources(action, milk, water, coffee):
         RESOURCES["coffee"] = coffee_inventory + coffee
 
 
+def update_money(action,amount):
+    if action == "add":
+        new_money = RESOURCES["money"] + amount
+        RESOURCES["money"] = new_money
+    elif action == "subtract":
+        new_money = RESOURCES["money"] - amount
+        RESOURCES["money"] = new_money
+
+
 def process_coins(cost):
     """Add all input coins then check if it is enough for their order. It is being used in process_order()"""
     print("Please insert coins.")
-    quarters = int(input("How many quarters?: "))
-    dimes = int(input("How many dimes?: "))
-    nickles = int(input("How many nickles?: "))
-    pennies = int(input("How many pennies?: "))
-    total = (QUARTERS * quarters) + (DIMES * dimes) + (NICKLES * nickles) + (PENNIES * pennies)
-    if total > coffee_cost:
-        change = total - cost
-        new_money = RESOURCES["money"] + cost
-        RESOURCES["money"] = new_money
+    quarters = int(input("How many quarters?: ")) * 0.25
+    dimes = int(input("How many dimes?: ")) * 0.10
+    nickles = int(input("How many nickles?: ")) * 0.05
+    pennies = int(input("How many pennies?: ")) * 0.01
+    total = quarters + dimes + nickles + pennies
+    if total >= coffee_cost:
+        change = round(total - cost, 2)
         return True, change
     else:
-        print("Sorry that's not enough money. Money refunded")
-        return False, "Exit"
+        print("Sorry that's not enough money. Money refunded.")
+        return False, total
 
 
 def print_resources():
@@ -49,8 +53,7 @@ def print_resources():
     print(f"Money: ${RESOURCES['money']}")
 
 
-def process_order(coffee, order_resources, cost):
-    # ordered ingredients
+def check_resources(order_resources):
     order_water_ingredient = order_resources.get("water", 0)
     order_coffee_ingredient = order_resources.get("coffee", 0)
     order_milk_ingredient = order_resources.get("milk", 0)
@@ -70,17 +73,21 @@ def process_order(coffee, order_resources, cost):
         print("Sorry there is not enough milk")
         return False
     else:
-        # if there is enough ingredients, call coins_process() to check if the input coins is enough for their order.
-        coins_process = process_coins(cost)
-        coins_enough = coins_process[0]
-        change = coins_process[1]
-        if coins_enough:
-            # if their money is enough, call the update_resources() to reduce the resource base on the ingredients used
-            # by their order.
-            update_resources("reduce", order_water_ingredient, order_coffee_ingredient, order_milk_ingredient)
-            print(f"Here is your {change}")
-            print(f"Here is your {coffee}. Enjoy!")
         return True
+
+
+def process_order(coffee, order_resources, change,cost):
+    order_water_ingredient = order_resources.get("water", 0)
+    order_coffee_ingredient = order_resources.get("coffee", 0)
+    order_milk_ingredient = order_resources.get("milk", 0)
+
+    # if their money is enough, call the update_resources() to reduce the resource base on the ingredients used
+    # by their order.
+    update_resources("reduce", order_water_ingredient, order_coffee_ingredient, order_milk_ingredient)
+    update_money("add", cost)
+    print(f"Here is your change ${change}")
+    print(f"Here is your {coffee}. Enjoy!")
+    return True
 
 
 is_coffee_machine_on = True
@@ -94,8 +101,16 @@ while is_coffee_machine_on:
         # refill resources
         update_resources("refill", 1000, 1000, 500)
         print_resources()
-    else:
+    elif (order == "espresso") or (order == "latte") or (order == "cappuccino"):
         ordered_coffee = MENU[order]
         coffee_ingredients = ordered_coffee["ingredients"]
         coffee_cost = ordered_coffee["cost"]
-        process_order = process_order(coffee=order, order_resources=coffee_ingredients, cost=coffee_cost)
+        enough_resources = check_resources(order_resources=coffee_ingredients)
+        if enough_resources:
+            transaction = process_coins(coffee_cost)
+            transaction_successful = transaction[0]
+            order_change = transaction[1]
+            if transaction_successful:
+                task = process_order(order, coffee_ingredients, order_change, coffee_cost)
+    else:
+        print("Sorry! We don't have that kind of coffee.")
