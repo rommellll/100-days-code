@@ -13,17 +13,13 @@ data = pandas.read_csv("50_states.csv")
 all_states = data.state.to_list()
 board = Board()
 guessed = []
-missed_state = []
 score = 0
 game_is_on = True
 while game_is_on:
     answer_state = screen.textinput(title=f"{score}/ {len(all_states)} States correct",
                                     prompt="What's another state?").title()
     if answer_state == "Exit":
-        for state in all_states:
-            if state not in guessed:
-                missed_state.append(state)
-
+        missed_state = [state for state in all_states if state not in guessed]
         data = pandas.DataFrame(missed_state)
         data.to_csv("./learning.csv")
         break
