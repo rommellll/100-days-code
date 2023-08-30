@@ -68,7 +68,6 @@ email_label = Label(text="Email/Username:")
 email_label.grid(column=0, row=2)
 
 email_input = Entry(width=35)
-email_input.insert(END, string="rommelmolosantos@gmail.com")
 email_input.grid(column=1, row=2, columnspan=2)
 
 # Row 3
