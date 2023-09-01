@@ -25,6 +25,6 @@ if weekday == 3:
     with open("quotes.txt") as quote_file:
         all_quotes = quote_file.readlines()
         quote = random.choice(all_quotes)
-    send_mail("emiliano.a.parafina@accenture.com", subject="Monday Motivations", body=quote)
+    send_mail(recipient=email, subject="Monday Motivations", body=quote)
 
 
